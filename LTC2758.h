@@ -85,9 +85,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef LTC2758_H
 #define LTC2758_H
 
-//! Define the SPI CS pin
-#ifndef LTC2758_CS
-#endif
+#define LTC2758_CS 10
 
 //! @name LTC2758 DAC Addresses
 #define ADDRESS_DACA        0x00

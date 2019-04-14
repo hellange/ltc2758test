@@ -88,9 +88,9 @@ ongoing work.
 */
 
 // Headerfiles
- #include <SPI.h>
- #include "LTC2758.h"
-#include "Userinterface.h"
+#include <SPI.h>
+#include "LTC2758.h"
+#include "UserInterface.h"
 // Global variables
  
 float DACA_RANGE_LOW = 0;
@@ -109,31 +109,25 @@ void menu2_change_range();
 uint8_t menu3_voltage_output();
 uint8_t menu4_square_wave_output();
 
-
-#define LTC2758_CS 10
-
-
-
-//! Initialize Linduino
 void setup()
 {
 
-    Serial.begin(115200);             // Initialize the serial port to the PC
-
+  Serial.begin(115200);             // Initialize the serial port to the PC
+  pinMode(10,OUTPUT);
+  pinMode(11,OUTPUT);
+  pinMode(12,INPUT);
+  pinMode(13,OUTPUT);
   SPI.begin();
-  SPI.beginTransaction (SPISettings (1000000, MSBFIRST, SPI_MODE0));
-
+  SPI.beginTransaction (SPISettings (2000000, MSBFIRST, SPI_MODE0));
   
   print_title();
 
   LTC2758_write(LTC2758_CS, LTC2758_WRITE_SPAN_DAC, ADDRESS_DAC_ALL, 0);  // initialising all channels to 0V - 5V range
-  //LTC2758_write(LTC2758_CS, LTC2758_WRITE_CODE_UPDATE_DAC, ADDRESS_DAC_ALL, 0); // initialising all channels to 0V
-  LTC2758_write(LTC2758_CS, LTC2758_WRITE_CODE_UPDATE_DAC, ADDRESS_DACA, 1); // initialising a
+  LTC2758_write(LTC2758_CS, LTC2758_WRITE_CODE_UPDATE_DAC, ADDRESS_DAC_ALL, 0); // initialising all channels to 0V
 
 }
 
  
-//! Repeats Linduino loop
 void loop()
 {
   int16_t user_command;
@@ -170,10 +164,8 @@ void print_title()
 {
   Serial.println();
   Serial.println(F("*****************************************************************"));
-  Serial.println(F("* DC1684A-A Demonstration Program                               *"));
-  Serial.println(F("*                                                               *"));
-  Serial.println(F("* This program demonstrates how to send data to the LTC2758     *"));
-  Serial.println(F("* Dual Serial 18-bit Soft Span DAC                              *"));
+  Serial.println(F("* Based on DC1684A-A Demonstration Program                      *"));
+  Serial.println(F("* Original for LTC2758, but tested to work on LTC2756.          *"));
   Serial.println(F("*                                                               *"));
   Serial.println(F("* Set the baud rate to 115200 and select the newline terminator.*"));
   Serial.println(F("*                                                               *"));
@@ -224,7 +216,7 @@ void print_prompt()
 uint8_t menu1_select_dac()
 {
   uint8_t choice;
-  Serial.println(F("\n1. DAC A"));
+  Serial.println(F("\n1. DAC A (or use LTC2756)"));
   Serial.println(F("2. DAC B"));
   Serial.println(F("3. All DACs"));
   Serial.print(F("\nEnter a choice: "));
@@ -463,12 +455,15 @@ uint8_t menu4_square_wave_output()
 
   while (!Serial.available()) //! Generate square wave until a key is pressed
   {
+          digitalWrite(9,HIGH);
+
     LTC2758_write(LTC2758_CS, LTC2758_WRITE_CODE_UPDATE_DAC, DAC_SELECTED, code_high);
     delayMicroseconds(time * 500);
+              digitalWrite(9,LOW);
+
     LTC2758_write(LTC2758_CS, LTC2758_WRITE_CODE_UPDATE_DAC, DAC_SELECTED, code_low);
     delayMicroseconds(time * 500);
   }
   receive_enter = read_int();
   return 0;
 }
-

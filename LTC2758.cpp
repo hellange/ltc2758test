@@ -66,21 +66,20 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <Arduino.h>
 #include <SPI.h>
+#include "LTC2758.h"
+
 
 // Transmits 32 bit input stream: 4-bit command + 4-bit don't-care + 18-bit data + 6 don't care
 void LTC2758_write(uint8_t cs, uint8_t dac_command, uint8_t dac_address, uint32_t data)
 {
-  //output_low(cs);
-    digitalWrite(10,LOW);
-  delay(50);
+  digitalWrite(LTC2758_CS,LOW);
+  
   SPI.transfer(dac_command|dac_address);
   SPI.transfer((uint8_t)((data >> 10) & 0xFF));  // D17:D10
   SPI.transfer((uint8_t)((data >> 2) & 0xFF));     // D9:D2
   SPI.transfer((uint8_t)((data << 6) & 0xFF));     // D1:D0
-  //output_high(cs);
-    delay(50);
 
-      digitalWrite(10,HIGH);
+  digitalWrite(LTC2758_CS,HIGH);
 
 }
 
