@@ -108,6 +108,7 @@ uint8_t menu1_select_dac();
 void menu2_change_range();
 uint8_t menu3_voltage_output();
 uint8_t menu4_square_wave_output();
+uint8_t menu5_pulse_output();
 
 void setup()
 {
@@ -150,6 +151,9 @@ void loop()
       case 4:
         menu4_square_wave_output();
         break;
+      case 5:
+        menu5_pulse_output();
+        break;        
       default:
         Serial.println(F("Incorrect Option"));
         break;
@@ -180,6 +184,7 @@ void print_prompt()
   Serial.println(F("  2. Change Span of selected DAC"));
   Serial.println(F("  3. Voltage Output"));
   Serial.println(F("  4. Square wave output"));
+  Serial.println(F("  5. Pulse output"));
 
   Serial.println(F("\nPresent Values:\n"));
   Serial.print(F("  DAC A Range: "));
@@ -463,6 +468,68 @@ uint8_t menu4_square_wave_output()
 
     LTC2758_write(LTC2758_CS, LTC2758_WRITE_CODE_UPDATE_DAC, DAC_SELECTED, code_low);
     delayMicroseconds(time * 500);
+  }
+  receive_enter = read_int();
+  return 0;
+}
+
+uint8_t menu5_pulse_output()
+{
+  uint16_t freq;
+  uint16_t pw;
+  float time;
+  float voltage_high, voltage_low;
+  uint32_t code_high, code_low;
+  uint8_t receive_enter;  // To receive enter key pressed
+
+  Serial.print("\nEnter voltage_high: ");
+  while (!Serial.available());
+  voltage_high = read_float();
+  Serial.print(voltage_high);
+  Serial.println(" V");
+
+  Serial.print("\nEnter voltage_low: ");
+  while (!Serial.available());
+  voltage_low = read_float();
+  Serial.print(voltage_low);
+  Serial.println(" V");
+
+  Serial.print("\nEnter the required frequency in Hz: ");
+  freq = read_int();
+  Serial.print(freq);
+  Serial.println(" Hz");
+
+  Serial.print("\nEnter the pulse width in uS: ");
+  pw = read_int();
+  Serial.print(pw);
+  Serial.println(" uS");
+
+  time = (float)1000/freq;
+  Serial.print("\nT = ");
+  Serial.print(time);
+  Serial.println(" ms");
+
+  //! Converting voltage into data
+  if (DAC_SELECTED == ADDRESS_DACA || DAC_SELECTED == ADDRESS_DAC_ALL)
+  {
+    code_high = LTC2758_voltage_to_code(voltage_high, DACA_RANGE_LOW, DACA_RANGE_HIGH);
+    code_low = LTC2758_voltage_to_code(voltage_low, DACA_RANGE_LOW, DACA_RANGE_HIGH);
+  }
+  if (DAC_SELECTED == ADDRESS_DACB || DAC_SELECTED == ADDRESS_DAC_ALL)
+  {
+    code_high = LTC2758_voltage_to_code(voltage_high, DACB_RANGE_LOW, DACB_RANGE_HIGH);
+    code_low = LTC2758_voltage_to_code(voltage_low, DACB_RANGE_LOW, DACB_RANGE_HIGH);
+  }
+
+  while (!Serial.available()) //! Generate square wave until a key is pressed
+  {
+
+    LTC2758_write(LTC2758_CS, LTC2758_WRITE_CODE_UPDATE_DAC, DAC_SELECTED, code_high);
+    delayMicroseconds(pw);
+
+    LTC2758_write(LTC2758_CS, LTC2758_WRITE_CODE_UPDATE_DAC, DAC_SELECTED, code_low);
+    delayMicroseconds(time*1000 - pw);
+
   }
   receive_enter = read_int();
   return 0;
