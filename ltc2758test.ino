@@ -2,6 +2,10 @@
 Linear Technology DC1684AA Demonstration Board.
 LTC2758: Dual Serial 18-Bit SoftSpan IOUT DAC
 
+Modified by Helge Langehaug, 2019:
+ - Independent on DC1684 and Linduino. Tested with Teensy with a LTC2756
+ - Added pulse menu 
+
 @verbatim
 NOTES
   Setup:
@@ -168,8 +172,8 @@ void print_title()
 {
   Serial.println();
   Serial.println(F("*****************************************************************"));
-  Serial.println(F("* Based on DC1684A-A Demonstration Program                      *"));
-  Serial.println(F("* Original for LTC2758, but tested to work on LTC2756.          *"));
+  Serial.println(F("* Testing LTC275x DAC                                           *"));
+  Serial.println(F("* Based on DC1684A-A Demonstration Program                      *"));  Serial.println(F("*                                                               *"));
   Serial.println(F("*                                                               *"));
   Serial.println(F("* Set the baud rate to 115200 and select the newline terminator.*"));
   Serial.println(F("*                                                               *"));
@@ -203,10 +207,10 @@ void print_prompt()
   switch (DAC_SELECTED)
   {
     case ADDRESS_DACA:
-      Serial.println(F("DAC A"));
+      Serial.println(F("DAC A (choose this for LTC2756)"));
       break;
     case ADDRESS_DACB:
-      Serial.println(F("DAC B"));
+      Serial.println(F("DAC B (don't choose this for LTC2756)"));
       break;
     case ADDRESS_DAC_ALL:
       Serial.println(F("ALL DACs"));
