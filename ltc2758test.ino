@@ -113,6 +113,7 @@ void menu2_change_range();
 uint8_t menu3_voltage_output();
 uint8_t menu4_square_wave_output();
 uint8_t menu5_pulse_output();
+uint8_t menu6_sequence_output();
 
 void setup()
 {
@@ -157,7 +158,9 @@ void loop()
         break;
       case 5:
         menu5_pulse_output();
-        break;        
+        break;      
+      case 6:
+        menu6_sequence_output();
       default:
         Serial.println(F("Incorrect Option"));
         break;
@@ -189,6 +192,7 @@ void print_prompt()
   Serial.println(F("  3. Voltage Output"));
   Serial.println(F("  4. Square wave output"));
   Serial.println(F("  5. Pulse output"));
+  Serial.println(F("  6. Sequence output"));
 
   Serial.println(F("\nPresent Values:\n"));
   Serial.print(F("  DAC A Range: "));
@@ -247,6 +251,7 @@ uint8_t menu1_select_dac()
       break;
   }
   Serial.flush();
+  return 0;
 }
 
 //! Function to choose the range of voltages to be used
@@ -395,10 +400,10 @@ uint8_t menu3_voltage_output()
 
     if (DAC_SELECTED == ADDRESS_DACA || DAC_SELECTED == ADDRESS_DAC_ALL)
     {
-      data = LTC2758_voltage_to_code(voltage, DACA_RANGE_LOW, DACA_RANGE_HIGH);
+      data = LTC2758_voltage_to_code(voltage, DACA_RANGE_LOW, DACA_RANGE_HIGH, true);
       LTC2758_write(LTC2758_CS, LTC2758_WRITE_CODE_UPDATE_DAC, DAC_SELECTED, data);
       Serial.print("\nDACA Output voltage = ");
-      Serial.print(voltage);
+      Serial.print(voltage,6);
       Serial.println(" V");
       Serial.print("\nDAC CODE: 0x");
       Serial.println(data, HEX);
@@ -406,11 +411,11 @@ uint8_t menu3_voltage_output()
 
     if (DAC_SELECTED == ADDRESS_DACB || DAC_SELECTED == ADDRESS_DAC_ALL)
     {
-      data = LTC2758_voltage_to_code(voltage, DACB_RANGE_LOW, DACB_RANGE_HIGH);
+      data = LTC2758_voltage_to_code(voltage, DACB_RANGE_LOW, DACB_RANGE_HIGH, true);
       LTC2758_write(LTC2758_CS, LTC2758_WRITE_CODE_UPDATE_DAC, DAC_SELECTED, data);
       Serial.println(DACB_RANGE_HIGH);
       Serial.print("\nDACB Output voltage = ");
-      Serial.print(voltage);
+      Serial.print(voltage,6);
       Serial.println(" V");
       Serial.print("\nDAC CODE: 0x");
       Serial.println(data, HEX);
@@ -453,13 +458,13 @@ uint8_t menu4_square_wave_output()
   //! Converting voltage into data
   if (DAC_SELECTED == ADDRESS_DACA || DAC_SELECTED == ADDRESS_DAC_ALL)
   {
-    code_high = LTC2758_voltage_to_code(voltage_high, DACA_RANGE_LOW, DACA_RANGE_HIGH);
-    code_low = LTC2758_voltage_to_code(voltage_low, DACA_RANGE_LOW, DACA_RANGE_HIGH);
+    code_high = LTC2758_voltage_to_code(voltage_high, DACA_RANGE_LOW, DACA_RANGE_HIGH, true);
+    code_low = LTC2758_voltage_to_code(voltage_low, DACA_RANGE_LOW, DACA_RANGE_HIGH, true);
   }
   if (DAC_SELECTED == ADDRESS_DACB || DAC_SELECTED == ADDRESS_DAC_ALL)
   {
-    code_high = LTC2758_voltage_to_code(voltage_high, DACB_RANGE_LOW, DACB_RANGE_HIGH);
-    code_low = LTC2758_voltage_to_code(voltage_low, DACB_RANGE_LOW, DACB_RANGE_HIGH);
+    code_high = LTC2758_voltage_to_code(voltage_high, DACB_RANGE_LOW, DACB_RANGE_HIGH, true);
+    code_low = LTC2758_voltage_to_code(voltage_low, DACB_RANGE_LOW, DACB_RANGE_HIGH, true);
   }
 
   while (!Serial.available()) //! Generate square wave until a key is pressed
@@ -516,13 +521,13 @@ uint8_t menu5_pulse_output()
   //! Converting voltage into data
   if (DAC_SELECTED == ADDRESS_DACA || DAC_SELECTED == ADDRESS_DAC_ALL)
   {
-    code_high = LTC2758_voltage_to_code(voltage_high, DACA_RANGE_LOW, DACA_RANGE_HIGH);
-    code_low = LTC2758_voltage_to_code(voltage_low, DACA_RANGE_LOW, DACA_RANGE_HIGH);
+    code_high = LTC2758_voltage_to_code(voltage_high, DACA_RANGE_LOW, DACA_RANGE_HIGH, true);
+    code_low = LTC2758_voltage_to_code(voltage_low, DACA_RANGE_LOW, DACA_RANGE_HIGH, true);
   }
   if (DAC_SELECTED == ADDRESS_DACB || DAC_SELECTED == ADDRESS_DAC_ALL)
   {
-    code_high = LTC2758_voltage_to_code(voltage_high, DACB_RANGE_LOW, DACB_RANGE_HIGH);
-    code_low = LTC2758_voltage_to_code(voltage_low, DACB_RANGE_LOW, DACB_RANGE_HIGH);
+    code_high = LTC2758_voltage_to_code(voltage_high, DACB_RANGE_LOW, DACB_RANGE_HIGH, true);
+    code_low = LTC2758_voltage_to_code(voltage_low, DACB_RANGE_LOW, DACB_RANGE_HIGH, true);
   }
 
   while (!Serial.available()) //! Generate square wave until a key is pressed
@@ -533,6 +538,64 @@ uint8_t menu5_pulse_output()
 
     LTC2758_write(LTC2758_CS, LTC2758_WRITE_CODE_UPDATE_DAC, DAC_SELECTED, code_low);
     delayMicroseconds(time*1000 - pw);
+
+  }
+  receive_enter = read_int();
+  return 0;
+}
+
+uint8_t menu6_sequence_output()
+{
+  uint16_t sw;
+  int16_t dir = 1;
+  float time;
+  float voltage_high, voltage_low, voltage, step;
+  uint32_t code;
+  uint8_t receive_enter;  // To receive enter key pressed
+
+  Serial.print("\nEnter voltage_high: ");
+  while (!Serial.available());
+  voltage_high = read_float();
+  Serial.print(voltage_high);
+  Serial.println(" V");
+
+  Serial.print("\nEnter voltage_low: ");
+  while (!Serial.available());
+  voltage_low = read_float();
+  Serial.print(voltage_low);
+  Serial.println(" V");
+
+  Serial.print("\nEnter voltage step: ");
+  step = read_float();
+  Serial.print(step);
+  Serial.println(" V");
+
+  Serial.print("\nEnter the step width in uS: ");
+  sw = read_int();
+  Serial.print(sw);
+  Serial.println(" uS");
+  voltage = voltage_low;
+  while (!Serial.available()) //! Generate square wave until a key is pressed
+  {
+    //! Converting voltage into data
+    if (DAC_SELECTED == ADDRESS_DACA || DAC_SELECTED == ADDRESS_DAC_ALL)
+    {
+      code = LTC2758_voltage_to_code(voltage, DACA_RANGE_LOW, DACA_RANGE_HIGH, false);
+    }
+    if (DAC_SELECTED == ADDRESS_DACB || DAC_SELECTED == ADDRESS_DAC_ALL)
+    {
+      code = LTC2758_voltage_to_code(voltage, DACB_RANGE_LOW, DACB_RANGE_HIGH, false);
+    }
+  
+    LTC2758_write(LTC2758_CS, LTC2758_WRITE_CODE_UPDATE_DAC, DAC_SELECTED, code);
+    delayMicroseconds(sw);
+    voltage = voltage + step * dir;
+    if (voltage >= voltage_high) {
+      dir = -1;
+    }
+    if (voltage <= voltage_low) {
+      dir = 1;
+    }
 
   }
   receive_enter = read_int();

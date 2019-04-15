@@ -95,16 +95,25 @@ float LTC2758_code_to_voltage(uint32_t dac_code, float min_output, float max_out
 }
 // Calculate a LTC2758 DAC code given the desired output voltage and the minimum / maximum
 // outputs for a given softspan range.
-uint32_t LTC2758_voltage_to_code(float dac_voltage, float min_output, float max_output)
+uint32_t LTC2758_voltage_to_code(float dac_voltage, float min_output, float max_output, bool serialOut)
 {
   uint32_t dac_code;
   float float_code;
+  dac_voltage = dac_voltage - 0.000685; // offset
+    dac_voltage = dac_voltage *1.00015; // offset
+
   float_code = 262143.0 * (dac_voltage - min_output) / (max_output - min_output);                    // Calculate the DAC code
   float_code = (float_code > (floor(float_code) + 0.5)) ? ceil(float_code) : floor(float_code);     // Round
   if (float_code < 0.0) float_code = 0.0;
   if (float_code > 262143.0) float_code = 262143.0;
-  dac_code = (uint32_t) (float_code);                                                               // Convert to unsigned integer
-      Serial.print("Calculated DAC CODE: 0x");
-      Serial.println(dac_code, HEX);
+
+  dac_code = (uint32_t) (float_code); 
+  // Convert to unsigned integer
+  if (serialOut) {
+    Serial.print("offset adjusted volt");
+    Serial.println(dac_voltage,6);
+    Serial.print("Calculated DAC CODE: 0x");
+    Serial.println(dac_code, HEX);
+  }
   return (dac_code);
 }

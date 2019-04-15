@@ -123,6 +123,6 @@ float LTC2758_code_to_voltage(uint32_t dac_code, float min_output, float max_out
 //! Calculate a LTC2758 DAC code given the desired output voltage and the minimum / maximum
 //! outputs for a given softspan range.
 //! @return 32 bit data
-uint32_t LTC2758_voltage_to_code(float dac_voltage, float min_output, float max_output);
+uint32_t LTC2758_voltage_to_code(float dac_voltage, float min_output, float max_output, bool serialOut);
 
 #endif  //  LTC2758_H
