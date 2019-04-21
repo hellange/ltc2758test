@@ -99,8 +99,6 @@ uint32_t LTC2758_voltage_to_code(float dac_voltage, float min_output, float max_
 {
   uint32_t dac_code;
   float float_code;
-  dac_voltage = dac_voltage - 0.000685; // offset
-    dac_voltage = dac_voltage *1.00015; // offset
 
   float_code = 262143.0 * (dac_voltage - min_output) / (max_output - min_output);                    // Calculate the DAC code
   float_code = (float_code > (floor(float_code) + 0.5)) ? ceil(float_code) : floor(float_code);     // Round
